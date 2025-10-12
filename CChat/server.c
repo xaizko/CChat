@@ -27,4 +27,17 @@ int main(int argc, char *argv[]) {
 	close(server_file_descriptor);
 	return 1;
     }
+
+    struct sockaddr_in sock;
+    memset(&sock, 0, sizeof(sock));
+    sock.sin_family = AF_INET;
+    sock.sin_addr.s_addr = inet_addr(ADDRESS);
+    sock.sin_port = htons(PORT);
+
+    // Bind socket
+    if (bind(server_file_descriptor, (struct sockaddr *)&sock, sizeof(sock)) < 0) {
+	fprintf(stderr, "Failed to bind\n");
+	close(server_file_descriptor);
+	return 1;
+    }
 }
