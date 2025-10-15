@@ -6,6 +6,13 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <pthread.h>
+
+void *handle_client(void *client_socket_ptr) {
+    int client_socket = *(int*)client_socket_ptr;
+    free(client_socket_ptr);
+    return 0;
+}
 
 int main(int argc, char *argv[]) {
     // Check for proper usage
@@ -50,6 +57,19 @@ int main(int argc, char *argv[]) {
 
     int clients = 0;
     while (clients < MAX_CLIENTS) { 
+	int client_fd;
+	struct sockaddr_in client_info;
+	socklen_t addrlen = sizeof(client_info);
+	client_fd = accept(server_file_descriptor, (struct sockaddr *)&sock_info, &addrlen);
+	if (client_fd < 0) {
+	    fprintf(stderr, "Failed to accept client connection\n");
+	    close(server_file_descriptor);
+	    return 1;
+	}
 
+	pthread_t thread;
+	int *pclient = malloc(sizeof(int));
+	*pclient = client_fd;
+	pthread_create(&thread, NULL, handle_client, pclient);
     }
 }
