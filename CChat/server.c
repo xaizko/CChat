@@ -40,4 +40,16 @@ int main(int argc, char *argv[]) {
 	close(server_file_descriptor);
 	return 1;
     }
+
+    // Listen for connections 
+    if (listen(server_file_descriptor, MAX_CLIENTS) < 0) {
+	fprintf(stderr, "Failed to listen for connections\n");
+	close(server_file_descriptor);
+	return 1;
+    }
+
+    int clients = 0;
+    while (clients < MAX_CLIENTS) { 
+
+    }
 }
