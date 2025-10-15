@@ -7,6 +7,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <stdbool.h>
+
+/* Global Variables */
+int *client_sockets;
+int client_count = 0;
+pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void *handle_client(void *client_socket_ptr) {
     int client_socket = *(int*)client_socket_ptr;
@@ -26,6 +32,11 @@ int main(int argc, char *argv[]) {
     const int PORT = atoi(argv[2]);
     const int MAX_CLIENTS = atoi(argv[3]);
 
+    client_sockets = malloc(MAX_CLIENTS * sizeof(int));
+    if (client_sockets == NULL) {
+	fprintf(stderr, "Failed to allocate memory for client sockets\n");
+	return 1;
+    }
 
     // Create socket
     const int server_file_descriptor = socket(AF_INET, SOCK_STREAM, 0);
@@ -55,21 +66,40 @@ int main(int argc, char *argv[]) {
 	return 1;
     }
 
-    int clients = 0;
-    while (clients < MAX_CLIENTS) { 
-	int client_fd;
+    while (true) { 
+	pthread_mutex_lock(&clients_mutex);
+	int is_full = client_count >= MAX_CLIENTS;
+	pthread_mutex_unlock(&clients_mutex);
+
+	if (is_full) {
+	    printf("Server is full. Waiting for slot to open...\n");
+	    sleep(1);
+	    continue;
+	}
+
 	struct sockaddr_in client_info;
 	socklen_t addrlen = sizeof(client_info);
-	client_fd = accept(server_file_descriptor, (struct sockaddr *)&sock_info, &addrlen);
+	int client_fd = accept(server_file_descriptor, (struct sockaddr *)&client_info, &addrlen);
 	if (client_fd < 0) {
 	    fprintf(stderr, "Failed to accept client connection\n");
 	    close(server_file_descriptor);
 	    return 1;
 	}
 
+	// Add client_fd to array of client sockets
+	pthread_mutex_lock(&clients_mutex);
+	client_sockets[client_count++] = client_fd; // This is a post-increment operator so it evalues client_count first
+	pthread_mutex_unlock(&clients_mutex);
+
+	// Spawn thread for client
 	pthread_t thread;
 	int *pclient = malloc(sizeof(int));
 	*pclient = client_fd;
 	pthread_create(&thread, NULL, handle_client, pclient);
     }
+
+    // Free memory
+    free(client_sockets);
+    close(server_file_descriptor);
+    return 0;
 }
