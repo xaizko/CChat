@@ -9,6 +9,8 @@
 #include <pthread.h>
 #include <stdbool.h>
 
+#define DISCONNECT_MESSAGE "DISCONNECT CLIENT"
+
 /* Global Variables */
 int *client_sockets;
 int client_count = 0;
@@ -16,6 +18,27 @@ pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void *handle_client(void *client_socket_ptr) {
     int client_socket = *(int*)client_socket_ptr;
+    char buffer[1024];
+    ssize_t bytes_received;
+    int connected = 1;
+
+    while(connected) {
+
+	if (strcmp(buffer, DISCONNECT_MESSAGE) == 0) {
+	    connected = 0;
+	    break;
+	}
+
+	bytes_received = recv(client_socket, buffer, sizeof(buffer), 0);
+	if (bytes_received == -1) {
+	    perror("failed to receive client message");
+	}
+
+	for (int i = 0; i < client_count; i++) {
+	    send(client_sockets[i], buffer, sizeof(buffer), 0);
+	}
+    }
+
     free(client_socket_ptr);
     return 0;
 }
