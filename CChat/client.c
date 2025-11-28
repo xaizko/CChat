@@ -1,4 +1,3 @@
-#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,6 +6,7 @@
 // Socket Libraries
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 
 int main(int argc, char *argv[]) {
     if (argc < 3) {
