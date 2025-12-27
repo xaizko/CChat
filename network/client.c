@@ -1,6 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/socket.h>
@@ -70,7 +68,7 @@ int client_send(const Message* msg) {
     return send(server_fd, buffer, len, 0);
 }
 
-int client_starT_receiver(MessageCallback callback) {
+int client_start_receiver(MessageCallback callback) {
     msg_callback = callback;
     return pthread_create(&recv_thread, NULL, receive_loop, NULL);
 }

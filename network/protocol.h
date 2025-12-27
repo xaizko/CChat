@@ -1,6 +1,8 @@
 #ifndef PROTOCOL_H
 #define PROTOCOL_H 
 
+#include <stddef.h>
+
 #define MAX_MSG_LEN 1024
 #define MAX_USERNAME_LEN 32
 #define DISCONNECT_MESSAGE "DISCONNECT CLIENT"
